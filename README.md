@@ -124,11 +124,13 @@ Match: True
 
 ## Technical Details
 
-- **Encryption**: Simple XOR encryption (key=42) for demonstration
+- **Encryption**: Simple XOR encryption (key=42) for demonstration purposes only (not for production use)
 - **Segmentation**: 10-byte segments in Transport Layer
-- **Checksum**: MD5 hash (first 8 characters) for segment verification
-- **Session ID**: Random 16-character alphanumeric string
+- **Checksum**: MD5 hash (first 8 characters) for segment verification in this educational context
+- **Session ID**: Cryptographically secure random 16-character alphanumeric string
 - **Binary**: Standard 8-bit binary representation
+
+**Note**: This is an educational project. The encryption and hashing methods used here are for demonstration purposes to understand OSI layer concepts, not for production security systems.
 
 ## Project Structure
 
@@ -136,7 +138,9 @@ Match: True
 OSI_simulatedLayers/
 ├── README.md              # This file
 ├── osi_simulator.py       # Console version with core OSI logic
-└── osi_gui.py            # GUI version with tkinter interface
+├── osi_gui.py            # GUI version with tkinter interface
+├── examples.py           # Example usage and demonstrations
+└── .gitignore            # Git ignore configuration
 ```
 
 ## Contributing

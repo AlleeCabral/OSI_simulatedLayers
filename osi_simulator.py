@@ -5,7 +5,7 @@ Simulates data encapsulation and decapsulation through all 7 OSI layers
 """
 
 import hashlib
-import random
+import secrets
 import string
 from typing import List, Dict, Any
 
@@ -106,8 +106,9 @@ class SessionLayer(OSILayer):
         super().__init__(5, "Session Layer")
     
     def _generate_session_id(self) -> str:
-        """Generate random session ID"""
-        return ''.join(random.choices(string.ascii_uppercase + string.digits, k=16))
+        """Generate cryptographically secure random session ID"""
+        alphabet = string.ascii_uppercase + string.digits
+        return ''.join(secrets.choice(alphabet) for _ in range(16))
     
     def encapsulate(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Add session ID"""
@@ -133,7 +134,10 @@ class TransportLayer(OSILayer):
         self.segment_size = 10
     
     def _calculate_checksum(self, data: bytes) -> str:
-        """Calculate simple checksum"""
+        """Calculate checksum for educational purposes
+        Note: MD5 is used here for simplicity in this educational context.
+        Production systems should use SHA-256 or other secure hash functions.
+        """
         return hashlib.md5(data).hexdigest()[:8]
     
     def encapsulate(self, data: Dict[str, Any]) -> Dict[str, Any]:
