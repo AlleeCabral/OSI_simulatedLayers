@@ -1,14 +1,14 @@
 # OSI_simulatedLayers
-Application that simulates the 7 layers of the OSI model
+Application that simulates the 7 layers of the OSI model using MQTT protocol
 
 ## Overview
-This application simulates data flow through all 7 layers of the OSI (Open Systems Interconnection) model, demonstrating both **encapsulation** (top to bottom) and **decapsulation** (bottom to top) processes.
+This application simulates data flow through all 7 layers of the OSI (Open Systems Interconnection) model, demonstrating both **encapsulation** (top to bottom) and **decapsulation** (bottom to top) processes. The simulator uses **MQTT protocol** (simulating messages from a Mosquitto broker) to show realistic IoT/messaging scenarios.
 
 ## Features
 
 ### Layer-by-Layer Implementation
 
-1. **Layer 7 - Application Layer**: Adds HTTP POST protocol headers
+1. **Layer 7 - Application Layer**: Adds MQTT PUBLISH packet headers (packet type, QoS, topic, packet ID)
 2. **Layer 6 - Presentation Layer**: Encrypts data (XOR encryption) and encodes to UTF-8
 3. **Layer 5 - Session Layer**: Adds random Session ID (16 characters)
 4. **Layer 4 - Transport Layer**: Splits data into 10-byte segments with port numbers (8080→443) and checksums
@@ -18,7 +18,7 @@ This application simulates data flow through all 7 layers of the OSI (Open Syste
 
 ### Visualization Options
 
-- **Console Mode**: Text-based visualization with detailed layer information
+- **Console Mode**: Text-based visualization with detailed layer information for both encapsulation and decapsulation
 - **GUI Mode**: Graphical interface with tabs for encapsulation, decapsulation, and visual layer diagram
 
 ## Installation
@@ -46,15 +46,17 @@ Run the console version for text-based output:
 python3 osi_simulator.py
 ```
 
-You'll be prompted to enter a message. The application will then:
-1. Show the encapsulation process through all 7 layers
-2. Show the decapsulation process back through the layers
+You'll be prompted to enter a message (MQTT payload). The application will then:
+1. Show the encapsulation process through all 7 layers with detailed information
+2. Show the decapsulation process back through the layers with detailed information about what's being removed
 3. Verify that the original message is correctly recovered
 
 Example:
 ```
-Enter a message to send through the OSI layers: Hello, OSI Model!
+Enter a message to send through the OSI layers (MQTT payload): Temperature: 23.5C
 ```
+
+The simulator shows how MQTT messages from a Mosquitto broker would be processed through the OSI layers.
 
 ### GUI Mode
 
@@ -74,9 +76,9 @@ The GUI provides:
 ## How It Works
 
 ### Encapsulation (Sending Data)
-1. User enters a message at the Application Layer
+1. User enters a message at the Application Layer (MQTT payload)
 2. Each layer adds its own header/processing:
-   - Application: HTTP POST header
+   - Application: MQTT PUBLISH packet (packet type, QoS, topic, packet ID)
    - Presentation: Encryption + UTF-8 encoding
    - Session: Session ID
    - Transport: Segmentation + ports + checksums
@@ -86,8 +88,11 @@ The GUI provides:
 
 ### Decapsulation (Receiving Data)
 1. Physical layer converts binary back to bytes
-2. Each layer removes its header/processing in reverse order
-3. Original message is recovered at the Application Layer
+2. Each layer removes its header/processing in reverse order, showing:
+   - What information is being removed
+   - How the data is being transformed back
+   - Details about the extracted information
+3. Original MQTT message is recovered at the Application Layer
 
 ### Verification
 The application verifies that the decapsulated message matches the original input, demonstrating the integrity of the OSI model simulation.
@@ -97,28 +102,59 @@ The application verifies that the decapsulated message matches the original inpu
 ### Console Mode
 ```
 ================================================================================
+OSI MODEL DATA FLOW SIMULATOR - MQTT Protocol
+================================================================================
+
+Simulating MQTT message from a Mosquitto broker
+You can send a message from terminal and receive it through OSI layers
+
+Enter a message to send through the OSI layers (MQTT payload): Temperature: 23.5C
+
+================================================================================
 ENCAPSULATION PROCESS (Application → Physical)
 ================================================================================
 
 ENCAPSULATION - Layer 7: Application Layer
 --------------------------------------------------------------------------------
-HTTP Header: POST /api/message HTTP/1.1...
-Message: Hello, OSI Model!
+Protocol: MQTT
+MQTT Packet Type: PUBLISH
+QoS Level: 1
+Topic: sensor/temperature
+Packet ID: 12345
+Payload Length: 18 bytes
+Message: Temperature: 23.5C
+
+→ Added MQTT headers (packet type, QoS, topic, packet ID)
 
 ENCAPSULATION - Layer 6: Presentation Layer
 --------------------------------------------------------------------------------
 Encoding: UTF-8
 Encryption: XOR
-Encrypted data length: 123 bytes
+Encrypted data length: 212 bytes
 First 20 bytes (hex): 5a4f5e5a...
+
+→ Encoded to UTF-8 and encrypted with XOR cipher
 
 [... continues through all layers ...]
 
 ================================================================================
+DECAPSULATION PROCESS (Physical → Application)
+================================================================================
+
+DECAPSULATION - Layer 1: Physical Layer
+--------------------------------------------------------------------------------
+Frames converted: 22 frames
+Frames reconstructed from binary data
+
+→ Converted binary signals back to frames
+
+[... continues through all layers with detailed decapsulation info ...]
+
+================================================================================
 VERIFICATION
 ================================================================================
-Original Message: Hello, OSI Model!
-Decapsulated Message: Hello, OSI Model!
+Original Message: Temperature: 23.5C
+Decapsulated Message: Temperature: 23.5C
 Match: True
 ```
 
