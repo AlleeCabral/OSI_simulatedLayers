@@ -1,14 +1,12 @@
-# OSI Model Layer-by-Layer Presentation
+# OSI Model Layer-by-Layer
 ## MQTT Protocol Data Flow Simulation
 
 ---
 
 ## Overview
 
-### OSI Model: Understanding Data Flow Through 7 Layers
-**MQTT Protocol Simulation**
+**What will be covered:**
 
-**What We'll Cover:**
 - How each layer processes data during encapsulation (sending)
 - How each layer processes data during decapsulation (receiving)
 - Real-world example using MQTT protocol
