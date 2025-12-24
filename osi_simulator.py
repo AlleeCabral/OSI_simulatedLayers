@@ -203,6 +203,7 @@ class TransportLayer(OSILayer):
         
         return {
             "session_id": data["session_id"],
+            "segments": segments,  # Include segments for display
             "data": {
                 "encrypted_data": reassembled,
                 "encoding": "UTF-8",
@@ -327,7 +328,8 @@ class PhysicalLayer(OSILayer):
     def decapsulate(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Convert binary back to frames"""
         frames = []
-        for binary_frame in data["binary_frames"]:
+        binary_frames = data["binary_frames"]
+        for binary_frame in binary_frames:
             # Convert binary back to bytes
             binary_data = binary_frame["binary_data"]
             segment_data = self._from_binary(binary_data)
@@ -339,6 +341,7 @@ class PhysicalLayer(OSILayer):
         
         return {
             "frames": frames,
+            "binary_frames": binary_frames,  # Include for display
             "session_id": data["session_id"],
             "layer": "Data Link Layer"
         }
@@ -423,7 +426,7 @@ class OSISimulator:
                 print(f"Encryption: {data['encryption']}")
                 print(f"Original Length: {data['original_length']} bytes")
                 print(f"Encrypted data length: {len(data['encrypted_data'])} bytes")
-                print(f"First 20 bytes (hex): {data['encrypted_data'][:20].hex()}")
+                print(f"All encrypted data (hex): {data['encrypted_data'].hex()}")
                 print(f"\n→ Encoded to UTF-8 and encrypted with XOR cipher")
             else:
                 print(f"Decrypted and decoded data")
@@ -448,12 +451,18 @@ class OSISimulator:
                 print(f"Segment Size: 10 bytes")
                 print(f"Source Port: {data['segments'][0]['src_port']}")
                 print(f"Destination Port: {data['segments'][0]['dst_port']}")
-                if data['segments']:
-                    print(f"First Segment Checksum: {data['segments'][0]['checksum']}")
+                print(f"All Segments:")
+                for i, segment in enumerate(data['segments']):
+                    print(f"  Segment {i}: seq={segment['sequence']}, checksum={segment['checksum']}, data(hex)={segment['data'].hex()}")
                 print(f"\n→ Split data into {data['total_segments']} segments with ports and checksums")
             else:
+                print(f"All Segments being reassembled:")
+                segments = data.get('segments', [])
+                for segment in segments:
+                    print(f"  Segment {segment['sequence']}: checksum={segment['checksum']}, data(hex)={segment['data'].hex()}")
                 print(f"Checksums verified")
                 print(f"Total data reassembled: {len(data['data']['encrypted_data'])} bytes")
+                print(f"Reassembled data (hex): {data['data']['encrypted_data'].hex()}")
                 print(f"\n→ Reassembled segments, verified checksums, removed port information")
         
         elif layer.layer_number == 3:  # Network
@@ -485,10 +494,14 @@ class OSISimulator:
             if process == "ENCAPSULATION":
                 print(f"Total Bits: {data['total_bits']}")
                 print(f"Total Binary Frames: {len(data['binary_frames'])}")
-                if data['binary_frames']:
-                    print(f"First Frame Binary (first 50 bits): {data['binary_frames'][0]['binary_data'][:50]}...")
+                print(f"All Binary Frames:")
+                for i, frame in enumerate(data['binary_frames']):
+                    print(f"  Frame {i}: {frame['bit_length']} bits, binary={frame['binary_data']}")
                 print(f"\n→ Converted frames to binary representation for transmission")
             else:
+                print(f"All Binary Frames being converted:")
+                for i, binary_frame in enumerate(data.get('binary_frames', [])):
+                    print(f"  Frame {i}: {binary_frame['bit_length']} bits, binary={binary_frame['binary_data']}")
                 print(f"Frames converted: {len(data['frames'])} frames")
                 print(f"Frames reconstructed from binary data")
                 print(f"\n→ Converted binary signals back to frames")

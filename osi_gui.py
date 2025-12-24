@@ -213,7 +213,7 @@ class OSISimulatorGUI:
             self.encap_text.insert(tk.END, f"Encoding: {data['encoding']}\n")
             self.encap_text.insert(tk.END, f"Encryption: {data['encryption']}\n")
             self.encap_text.insert(tk.END, f"Encrypted data length: {len(data['encrypted_data'])} bytes\n")
-            self.encap_text.insert(tk.END, f"First 20 bytes (hex): {data['encrypted_data'][:20].hex()}\n")
+            self.encap_text.insert(tk.END, f"All encrypted data (hex): {data['encrypted_data'].hex()}\n")
             self.encap_text.insert(tk.END, f"\n→ Encoded to UTF-8 and encrypted with XOR cipher\n")
         
         elif layer.layer_number == 5:  # Session
@@ -225,8 +225,9 @@ class OSISimulatorGUI:
             self.encap_text.insert(tk.END, f"Segment Size: 10 bytes\n")
             self.encap_text.insert(tk.END, f"Source Port: {data['segments'][0]['src_port']}\n")
             self.encap_text.insert(tk.END, f"Destination Port: {data['segments'][0]['dst_port']}\n")
-            if data['segments']:
-                self.encap_text.insert(tk.END, f"First Segment Checksum: {data['segments'][0]['checksum']}\n")
+            self.encap_text.insert(tk.END, f"All Segments:\n")
+            for i, segment in enumerate(data['segments']):
+                self.encap_text.insert(tk.END, f"  Segment {i}: seq={segment['sequence']}, checksum={segment['checksum']}, data(hex)={segment['data'].hex()}\n")
             self.encap_text.insert(tk.END, f"\n→ Split data into {data['total_segments']} segments with ports and checksums\n")
         
         elif layer.layer_number == 3:  # Network
@@ -247,8 +248,9 @@ class OSISimulatorGUI:
         elif layer.layer_number == 1:  # Physical
             self.encap_text.insert(tk.END, f"Total Bits: {data['total_bits']}\n")
             self.encap_text.insert(tk.END, f"Total Binary Frames: {len(data['binary_frames'])}\n")
-            if data['binary_frames']:
-                self.encap_text.insert(tk.END, f"First Frame Binary (first 50 bits): {data['binary_frames'][0]['binary_data'][:50]}...\n")
+            self.encap_text.insert(tk.END, f"All Binary Frames:\n")
+            for i, frame in enumerate(data['binary_frames']):
+                self.encap_text.insert(tk.END, f"  Frame {i}: {frame['bit_length']} bits, binary={frame['binary_data']}\n")
             self.encap_text.insert(tk.END, f"\n→ Converted frames to binary representation for transmission\n")
         
         self.encap_text.insert(tk.END, "\n")
@@ -275,8 +277,13 @@ class OSISimulatorGUI:
             self.decap_text.insert(tk.END, "Data passed to Presentation Layer\n")
             self.decap_text.insert(tk.END, f"\n→ Removed session information, validated connection\n")
         elif layer.layer_number == 4:  # Transport
+            self.decap_text.insert(tk.END, "All Segments being reassembled:\n")
+            segments = data.get('segments', [])
+            for segment in segments:
+                self.decap_text.insert(tk.END, f"  Segment {segment['sequence']}: checksum={segment['checksum']}, data(hex)={segment['data'].hex()}\n")
             self.decap_text.insert(tk.END, "Checksums verified\n")
             self.decap_text.insert(tk.END, f"Total data reassembled: {len(data['data']['encrypted_data'])} bytes\n")
+            self.decap_text.insert(tk.END, f"Reassembled data (hex): {data['data']['encrypted_data'].hex()}\n")
             self.decap_text.insert(tk.END, f"\n→ Reassembled segments, verified checksums, removed port information\n")
         elif layer.layer_number == 3:  # Network
             self.decap_text.insert(tk.END, f"Segments extracted: {len(data['segments'])} segments\n")
@@ -287,6 +294,9 @@ class OSISimulatorGUI:
             self.decap_text.insert(tk.END, "Packets extracted from frames\n")
             self.decap_text.insert(tk.END, f"\n→ Removed MAC addresses and frame headers, extracted network packets\n")
         elif layer.layer_number == 1:  # Physical
+            self.decap_text.insert(tk.END, "All Binary Frames being converted:\n")
+            for i, binary_frame in enumerate(data.get('binary_frames', [])):
+                self.decap_text.insert(tk.END, f"  Frame {i}: {binary_frame['bit_length']} bits, binary={binary_frame['binary_data']}\n")
             self.decap_text.insert(tk.END, f"Frames converted: {len(data['frames'])} frames\n")
             self.decap_text.insert(tk.END, "Frames reconstructed from binary data\n")
             self.decap_text.insert(tk.END, f"\n→ Converted binary signals back to frames\n")
