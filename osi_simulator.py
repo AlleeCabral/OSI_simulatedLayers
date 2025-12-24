@@ -45,7 +45,7 @@ class ApplicationLayer(OSILayer):
         
         # MQTT Variable Header
         mqtt_variable_header = {
-            "topic": "sensor/temperature",
+            "topic": "Test/message",
             "packet_id": 12345
         }
         
