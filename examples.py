@@ -2,6 +2,7 @@
 """
 Example usage of the OSI Model Simulator
 Demonstrates how to use the OSI simulator programmatically
+Using MQTT protocol (Mosquitto broker simulation)
 """
 
 from osi_simulator import OSISimulator
@@ -55,7 +56,7 @@ def example_layer_details():
     phys_layer = PhysicalLayer()
     
     print("\nLayer Configuration:")
-    print(f"  Application: HTTP POST")
+    print(f"  Application: MQTT PUBLISH (Mosquitto broker)")
     print(f"  Presentation: XOR Encryption (key={pres_layer.key}), UTF-8 Encoding")
     print(f"  Transport: Ports {trans_layer.src_port} → {trans_layer.dst_port}, Segment size: {trans_layer.segment_size} bytes")
     print(f"  Network: {net_layer.src_ip} → {net_layer.dst_ip}")
@@ -66,14 +67,14 @@ def example_layer_details():
 def example_custom_message():
     """Example with custom messages"""
     print("\n\n" + "="*80)
-    print("EXAMPLE 3: Multiple Messages")
+    print("EXAMPLE 3: Multiple MQTT Messages")
     print("="*80)
     
     messages = [
-        "GET /api/users HTTP/1.1",
-        "JSON: {\"name\": \"John\", \"age\": 30}",
-        "Short msg",
-        "A longer message that will be split into multiple segments during transport!"
+        "Temperature: 23.5C",
+        '{"sensor": "DHT22", "temp": 23.5, "humidity": 45}',
+        "Alert",
+        "Simulating a longer MQTT message that will be split into multiple segments during transport!"
     ]
     
     for i, message in enumerate(messages, 1):
@@ -108,7 +109,7 @@ def main():
     """Run all examples"""
     print("\n")
     print("╔" + "="*78 + "╗")
-    print("║" + " "*20 + "OSI MODEL SIMULATOR - EXAMPLES" + " "*28 + "║")
+    print("║" + " "*15 + "OSI MODEL SIMULATOR - MQTT PROTOCOL EXAMPLES" + " "*19 + "║")
     print("╚" + "="*78 + "╝")
     
     # Run examples

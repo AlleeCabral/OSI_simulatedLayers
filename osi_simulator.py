@@ -2,6 +2,7 @@
 """
 OSI Model Data Flow Simulator
 Simulates data encapsulation and decapsulation through all 7 OSI layers
+Using MQTT protocol (Mosquitto broker simulation)
 """
 
 import hashlib
@@ -27,28 +28,44 @@ class OSILayer:
 
 
 class ApplicationLayer(OSILayer):
-    """Layer 7: Application Layer - HTTP POST protocol"""
+    """Layer 7: Application Layer - MQTT protocol"""
     
     def __init__(self):
         super().__init__(7, "Application Layer")
     
     def encapsulate(self, message: str) -> Dict[str, Any]:
-        """Add HTTP POST header to the message"""
-        http_header = (
-            "POST /api/message HTTP/1.1\r\n"
-            "Host: example.com\r\n"
-            "Content-Type: text/plain\r\n"
-            f"Content-Length: {len(message)}\r\n"
-            "\r\n"
-        )
+        """Add MQTT PUBLISH header to the message"""
+        # MQTT Control Packet Type: PUBLISH (3), QoS level 1, No Retain
+        mqtt_fixed_header = {
+            "packet_type": "PUBLISH",
+            "qos": 1,
+            "retain": False,
+            "dup": False
+        }
+        
+        # MQTT Variable Header
+        mqtt_variable_header = {
+            "topic": "sensor/temperature",
+            "packet_id": 12345
+        }
+        
+        # Complete MQTT packet structure
+        mqtt_packet = {
+            "fixed_header": mqtt_fixed_header,
+            "variable_header": mqtt_variable_header,
+            "payload": message,
+            "payload_length": len(message)
+        }
+        
         return {
-            "header": http_header,
+            "mqtt_packet": mqtt_packet,
             "data": message,
-            "layer": self.layer_name
+            "layer": self.layer_name,
+            "protocol": "MQTT"
         }
     
     def decapsulate(self, data: Dict[str, Any]) -> str:
-        """Extract original message from HTTP POST"""
+        """Extract original message from MQTT PUBLISH packet"""
         return data["data"]
 
 
@@ -61,7 +78,10 @@ class PresentationLayer(OSILayer):
     
     def encapsulate(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Encode to UTF-8 and encrypt"""
-        full_message = data["header"] + data["data"]
+        import json
+        # Serialize MQTT packet to JSON string
+        mqtt_packet_str = json.dumps(data["mqtt_packet"])
+        full_message = mqtt_packet_str
         
         # Encode to UTF-8
         encoded = full_message.encode('utf-8')
@@ -74,11 +94,13 @@ class PresentationLayer(OSILayer):
             "encoding": "UTF-8",
             "encryption": "XOR",
             "layer": self.layer_name,
-            "original_length": len(full_message)
+            "original_length": len(full_message),
+            "original_message": data["data"]
         }
     
     def decapsulate(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Decrypt and decode"""
+        import json
         encrypted = data["encrypted_data"]
         
         # Decrypt using XOR
@@ -87,15 +109,14 @@ class PresentationLayer(OSILayer):
         # Decode from UTF-8
         decoded = decrypted.decode('utf-8')
         
-        # Split header and data
-        parts = decoded.split("\r\n\r\n", 1)
-        header = parts[0] + "\r\n\r\n" if len(parts) > 1 else ""
-        message = parts[1] if len(parts) > 1 else decoded
+        # Parse JSON to get MQTT packet structure
+        mqtt_packet = json.loads(decoded)
         
         return {
-            "header": header,
-            "data": message,
-            "layer": "Application Layer"
+            "mqtt_packet": mqtt_packet,
+            "data": mqtt_packet["payload"],
+            "layer": "Application Layer",
+            "protocol": "MQTT"
         }
 
 
@@ -383,21 +404,43 @@ class OSISimulator:
         
         if layer.layer_number == 7:  # Application
             if process == "ENCAPSULATION":
-                print(f"HTTP Header: {data['header'][:50]}...")
+                print(f"Protocol: MQTT")
+                print(f"MQTT Packet Type: {data['mqtt_packet']['fixed_header']['packet_type']}")
+                print(f"QoS Level: {data['mqtt_packet']['fixed_header']['qos']}")
+                print(f"Topic: {data['mqtt_packet']['variable_header']['topic']}")
+                print(f"Packet ID: {data['mqtt_packet']['variable_header']['packet_id']}")
+                print(f"Payload Length: {data['mqtt_packet']['payload_length']} bytes")
                 print(f"Message: {data['data']}")
+                print(f"\n→ Added MQTT headers (packet type, QoS, topic, packet ID)")
             else:
-                print(f"Original Message: {data}")
+                print(f"Protocol: MQTT")
+                print(f"Extracted Message: {data}")
+                print(f"\n→ Removed MQTT headers, retrieved original payload")
         
         elif layer.layer_number == 6:  # Presentation
             if process == "ENCAPSULATION":
                 print(f"Encoding: {data['encoding']}")
                 print(f"Encryption: {data['encryption']}")
+                print(f"Original Length: {data['original_length']} bytes")
                 print(f"Encrypted data length: {len(data['encrypted_data'])} bytes")
                 print(f"First 20 bytes (hex): {data['encrypted_data'][:20].hex()}")
+                print(f"\n→ Encoded to UTF-8 and encrypted with XOR cipher")
+            else:
+                print(f"Decrypted and decoded data")
+                print(f"MQTT Packet Type: {data['mqtt_packet']['fixed_header']['packet_type']}")
+                print(f"Topic: {data['mqtt_packet']['variable_header']['topic']}")
+                print(f"Payload: {data['data']}")
+                print(f"\n→ Decrypted using XOR cipher and decoded from UTF-8")
         
         elif layer.layer_number == 5:  # Session
             if process == "ENCAPSULATION":
                 print(f"Session ID: {data['session_id']}")
+                print(f"Session Layer encapsulated")
+                print(f"\n→ Added session ID for connection management")
+            else:
+                print(f"Session ID extracted and validated")
+                print(f"Data passed to Presentation Layer")
+                print(f"\n→ Removed session information, validated connection")
         
         elif layer.layer_number == 4:  # Transport
             if process == "ENCAPSULATION":
@@ -407,6 +450,11 @@ class OSISimulator:
                 print(f"Destination Port: {data['segments'][0]['dst_port']}")
                 if data['segments']:
                     print(f"First Segment Checksum: {data['segments'][0]['checksum']}")
+                print(f"\n→ Split data into {data['total_segments']} segments with ports and checksums")
+            else:
+                print(f"Checksums verified")
+                print(f"Total data reassembled: {len(data['data']['encrypted_data'])} bytes")
+                print(f"\n→ Reassembled segments, verified checksums, removed port information")
         
         elif layer.layer_number == 3:  # Network
             if process == "ENCAPSULATION":
@@ -415,6 +463,11 @@ class OSISimulator:
                 print(f"Destination IP: {data['packets'][0]['dst_ip']}")
                 print(f"TTL: {data['packets'][0]['ttl']}")
                 print(f"Protocol: {data['packets'][0]['protocol']}")
+                print(f"\n→ Added IP addresses and routing information to each segment")
+            else:
+                print(f"Segments extracted: {len(data['segments'])} segments")
+                print(f"Segments extracted from packets")
+                print(f"\n→ Removed IP headers, extracted transport layer segments")
         
         elif layer.layer_number == 2:  # Data Link
             if process == "ENCAPSULATION":
@@ -422,6 +475,11 @@ class OSISimulator:
                 print(f"Source MAC: {data['frames'][0]['src_mac']}")
                 print(f"Destination MAC: {data['frames'][0]['dst_mac']}")
                 print(f"EtherType: {data['frames'][0]['ethertype']}")
+                print(f"\n→ Added MAC addresses and frame check sequence to each packet")
+            else:
+                print(f"Packets extracted: {len(data['packets'])} packets")
+                print(f"Packets extracted from frames")
+                print(f"\n→ Removed MAC addresses and frame headers, extracted network packets")
         
         elif layer.layer_number == 1:  # Physical
             if process == "ENCAPSULATION":
@@ -429,16 +487,23 @@ class OSISimulator:
                 print(f"Total Binary Frames: {len(data['binary_frames'])}")
                 if data['binary_frames']:
                     print(f"First Frame Binary (first 50 bits): {data['binary_frames'][0]['binary_data'][:50]}...")
+                print(f"\n→ Converted frames to binary representation for transmission")
+            else:
+                print(f"Frames converted: {len(data['frames'])} frames")
+                print(f"Frames reconstructed from binary data")
+                print(f"\n→ Converted binary signals back to frames")
 
 
 def main():
     """Main function to run the OSI simulator"""
     print("="*80)
-    print("OSI MODEL DATA FLOW SIMULATOR")
+    print("OSI MODEL DATA FLOW SIMULATOR - MQTT Protocol")
     print("="*80)
+    print("\nSimulating MQTT message from a Mosquitto broker")
+    print("You can send a message from terminal and receive it through OSI layers\n")
     
     # Get user input
-    message = input("\nEnter a message to send through the OSI layers: ").strip()
+    message = input("Enter a message to send through the OSI layers (MQTT payload): ").strip()
     
     if not message:
         message = "Hello, OSI Model!"
