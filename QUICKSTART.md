@@ -6,7 +6,7 @@
 ```bash
 python3 osi_simulator.py
 ```
-Then enter your message when prompted, or press Enter for the default message.
+Then enter your MQTT message when prompted, or press Enter for the default message.
 
 ### GUI Mode (Visual Interface)
 ```bash
@@ -22,7 +22,7 @@ python3 examples.py
 ## What You'll See
 
 ### Encapsulation Process (Application → Physical)
-1. **Layer 7**: Your message gets HTTP POST headers
+1. **Layer 7**: Your message gets MQTT PUBLISH packet headers (packet type, QoS, topic, packet ID)
 2. **Layer 6**: Message is encrypted and encoded to UTF-8
 3. **Layer 5**: Session ID is added
 4. **Layer 4**: Data split into 10-byte segments with ports and checksums
@@ -31,14 +31,20 @@ python3 examples.py
 7. **Layer 1**: Everything converted to binary
 
 ### Decapsulation Process (Physical → Application)
-The process reverses, removing each layer's additions until your original message is recovered.
+The process reverses, removing each layer's additions until your original MQTT message is recovered.
+**Each layer now shows detailed information about:**
+- What headers/information are being removed
+- How the data is being transformed
+- The extracted information at each step
 
 ## Key Features
 
 ✓ **Full OSI Model**: All 7 layers implemented
+✓ **MQTT Protocol**: Simulates messages from Mosquitto broker
 ✓ **Data Integrity**: Original message perfectly recovered
+✓ **Detailed Logging**: Shows encapsulation AND decapsulation with full details
 ✓ **Visualization**: Both console and GUI options
-✓ **Educational**: Clear output showing each layer's processing
+✓ **Educational**: Clear output showing each layer's processing and transformation
 ✓ **Secure**: Uses cryptographically secure session IDs
 
 ## Example Session
@@ -46,19 +52,22 @@ The process reverses, removing each layer's additions until your original messag
 ```bash
 $ python3 osi_simulator.py
 ================================================================================
-OSI MODEL DATA FLOW SIMULATOR
+OSI MODEL DATA FLOW SIMULATOR - MQTT Protocol
 ================================================================================
 
-Enter a message to send through the OSI layers: Hello World!
+Simulating MQTT message from a Mosquitto broker
+You can send a message from terminal and receive it through OSI layers
 
-[Shows encapsulation through all 7 layers]
-[Shows decapsulation through all 7 layers]
+Enter a message to send through the OSI layers (MQTT payload): Temperature: 23.5C
+
+[Shows detailed encapsulation through all 7 layers]
+[Shows detailed decapsulation through all 7 layers with transformation info]
 
 ================================================================================
 VERIFICATION
 ================================================================================
-Original Message: Hello World!
-Decapsulated Message: Hello World!
+Original Message: Temperature: 23.5C
+Decapsulated Message: Temperature: 23.5C
 Match: True
 ```
 
@@ -70,9 +79,11 @@ Match: True
 
 ## Quick Tips
 
+- **IoT messages**: Try sensor data like "Temperature: 23.5C" or "Humidity: 45%"
+- **JSON payloads**: Test with JSON like '{"sensor": "DHT22", "temp": 23.5}'
 - **Short messages**: See how even small data goes through all layers
 - **Long messages**: Watch data being split into segments
 - **Special characters**: Test with symbols, numbers, unicode
-- **GUI mode**: Use tabs to compare encapsulation vs decapsulation
+- **GUI mode**: Use tabs to compare encapsulation vs decapsulation details
 
-Enjoy learning about the OSI model!
+Enjoy learning about the OSI model with MQTT protocol!

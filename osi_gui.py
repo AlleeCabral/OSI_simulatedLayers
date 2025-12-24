@@ -2,6 +2,7 @@
 """
 OSI Model Data Flow Simulator - GUI Version
 Graphical visualization of OSI layer encapsulation and decapsulation
+Using MQTT protocol (Mosquitto broker simulation)
 """
 
 import tkinter as tk
@@ -30,7 +31,7 @@ class OSISimulatorGUI:
         # Title
         title_label = tk.Label(
             self.root,
-            text="OSI Model Data Flow Simulator",
+            text="OSI Model Data Flow Simulator - MQTT Protocol",
             font=("Arial", 18, "bold"),
             bg="#2c3e50",
             fg="white",
@@ -42,7 +43,7 @@ class OSISimulatorGUI:
         input_frame = tk.Frame(self.root, pady=10)
         input_frame.pack(fill=tk.X, padx=10)
         
-        tk.Label(input_frame, text="Enter Message:", font=("Arial", 12)).pack(side=tk.LEFT, padx=5)
+        tk.Label(input_frame, text="Enter MQTT Message:", font=("Arial", 12)).pack(side=tk.LEFT, padx=5)
         
         self.message_entry = tk.Entry(input_frame, font=("Arial", 12), width=50)
         self.message_entry.pack(side=tk.LEFT, padx=5)
@@ -200,17 +201,24 @@ class OSISimulatorGUI:
         self.encap_text.insert(tk.END, "-" * 80 + "\n")
         
         if layer.layer_number == 7:  # Application
-            self.encap_text.insert(tk.END, f"HTTP Header: {data['header'][:50]}...\n")
+            self.encap_text.insert(tk.END, f"Protocol: MQTT\n")
+            self.encap_text.insert(tk.END, f"MQTT Packet Type: {data['mqtt_packet']['fixed_header']['packet_type']}\n")
+            self.encap_text.insert(tk.END, f"QoS Level: {data['mqtt_packet']['fixed_header']['qos']}\n")
+            self.encap_text.insert(tk.END, f"Topic: {data['mqtt_packet']['variable_header']['topic']}\n")
+            self.encap_text.insert(tk.END, f"Packet ID: {data['mqtt_packet']['variable_header']['packet_id']}\n")
             self.encap_text.insert(tk.END, f"Message: {data['data']}\n")
+            self.encap_text.insert(tk.END, f"\n→ Added MQTT headers (packet type, QoS, topic, packet ID)\n")
         
         elif layer.layer_number == 6:  # Presentation
             self.encap_text.insert(tk.END, f"Encoding: {data['encoding']}\n")
             self.encap_text.insert(tk.END, f"Encryption: {data['encryption']}\n")
             self.encap_text.insert(tk.END, f"Encrypted data length: {len(data['encrypted_data'])} bytes\n")
             self.encap_text.insert(tk.END, f"First 20 bytes (hex): {data['encrypted_data'][:20].hex()}\n")
+            self.encap_text.insert(tk.END, f"\n→ Encoded to UTF-8 and encrypted with XOR cipher\n")
         
         elif layer.layer_number == 5:  # Session
             self.encap_text.insert(tk.END, f"Session ID: {data['session_id']}\n")
+            self.encap_text.insert(tk.END, f"\n→ Added session ID for connection management\n")
         
         elif layer.layer_number == 4:  # Transport
             self.encap_text.insert(tk.END, f"Total Segments: {data['total_segments']}\n")
@@ -219,6 +227,7 @@ class OSISimulatorGUI:
             self.encap_text.insert(tk.END, f"Destination Port: {data['segments'][0]['dst_port']}\n")
             if data['segments']:
                 self.encap_text.insert(tk.END, f"First Segment Checksum: {data['segments'][0]['checksum']}\n")
+            self.encap_text.insert(tk.END, f"\n→ Split data into {data['total_segments']} segments with ports and checksums\n")
         
         elif layer.layer_number == 3:  # Network
             self.encap_text.insert(tk.END, f"Total Packets: {data['total_packets']}\n")
@@ -226,18 +235,21 @@ class OSISimulatorGUI:
             self.encap_text.insert(tk.END, f"Destination IP: {data['packets'][0]['dst_ip']}\n")
             self.encap_text.insert(tk.END, f"TTL: {data['packets'][0]['ttl']}\n")
             self.encap_text.insert(tk.END, f"Protocol: {data['packets'][0]['protocol']}\n")
+            self.encap_text.insert(tk.END, f"\n→ Added IP addresses and routing information to each segment\n")
         
         elif layer.layer_number == 2:  # Data Link
             self.encap_text.insert(tk.END, f"Total Frames: {data['total_frames']}\n")
             self.encap_text.insert(tk.END, f"Source MAC: {data['frames'][0]['src_mac']}\n")
             self.encap_text.insert(tk.END, f"Destination MAC: {data['frames'][0]['dst_mac']}\n")
             self.encap_text.insert(tk.END, f"EtherType: {data['frames'][0]['ethertype']}\n")
+            self.encap_text.insert(tk.END, f"\n→ Added MAC addresses and frame check sequence to each packet\n")
         
         elif layer.layer_number == 1:  # Physical
             self.encap_text.insert(tk.END, f"Total Bits: {data['total_bits']}\n")
             self.encap_text.insert(tk.END, f"Total Binary Frames: {len(data['binary_frames'])}\n")
             if data['binary_frames']:
                 self.encap_text.insert(tk.END, f"First Frame Binary (first 50 bits): {data['binary_frames'][0]['binary_data'][:50]}...\n")
+            self.encap_text.insert(tk.END, f"\n→ Converted frames to binary representation for transmission\n")
         
         self.encap_text.insert(tk.END, "\n")
         self.encap_text.see(tk.END)
@@ -249,19 +261,35 @@ class OSISimulatorGUI:
         self.decap_text.insert(tk.END, "-" * 80 + "\n")
         
         if layer.layer_number == 7:  # Application
-            self.decap_text.insert(tk.END, f"Original Message: {data}\n")
+            self.decap_text.insert(tk.END, f"Protocol: MQTT\n")
+            self.decap_text.insert(tk.END, f"Extracted Message: {data}\n")
+            self.decap_text.insert(tk.END, f"\n→ Removed MQTT headers, retrieved original payload\n")
         elif layer.layer_number == 6:  # Presentation
-            self.decap_text.insert(tk.END, "Data decrypted and decoded\n")
+            self.decap_text.insert(tk.END, "Decrypted and decoded data\n")
+            self.decap_text.insert(tk.END, f"MQTT Packet Type: {data['mqtt_packet']['fixed_header']['packet_type']}\n")
+            self.decap_text.insert(tk.END, f"Topic: {data['mqtt_packet']['variable_header']['topic']}\n")
+            self.decap_text.insert(tk.END, f"Payload: {data['data']}\n")
+            self.decap_text.insert(tk.END, f"\n→ Decrypted using XOR cipher and decoded from UTF-8\n")
         elif layer.layer_number == 5:  # Session
-            self.decap_text.insert(tk.END, "Session validated\n")
+            self.decap_text.insert(tk.END, "Session ID extracted and validated\n")
+            self.decap_text.insert(tk.END, "Data passed to Presentation Layer\n")
+            self.decap_text.insert(tk.END, f"\n→ Removed session information, validated connection\n")
         elif layer.layer_number == 4:  # Transport
-            self.decap_text.insert(tk.END, "Segments reassembled\n")
+            self.decap_text.insert(tk.END, "Checksums verified\n")
+            self.decap_text.insert(tk.END, f"Total data reassembled: {len(data['data']['encrypted_data'])} bytes\n")
+            self.decap_text.insert(tk.END, f"\n→ Reassembled segments, verified checksums, removed port information\n")
         elif layer.layer_number == 3:  # Network
-            self.decap_text.insert(tk.END, "Packets extracted\n")
+            self.decap_text.insert(tk.END, f"Segments extracted: {len(data['segments'])} segments\n")
+            self.decap_text.insert(tk.END, "Segments extracted from packets\n")
+            self.decap_text.insert(tk.END, f"\n→ Removed IP headers, extracted transport layer segments\n")
         elif layer.layer_number == 2:  # Data Link
-            self.decap_text.insert(tk.END, "Frames extracted\n")
+            self.decap_text.insert(tk.END, f"Packets extracted: {len(data['packets'])} packets\n")
+            self.decap_text.insert(tk.END, "Packets extracted from frames\n")
+            self.decap_text.insert(tk.END, f"\n→ Removed MAC addresses and frame headers, extracted network packets\n")
         elif layer.layer_number == 1:  # Physical
-            self.decap_text.insert(tk.END, "Binary data converted\n")
+            self.decap_text.insert(tk.END, f"Frames converted: {len(data['frames'])} frames\n")
+            self.decap_text.insert(tk.END, "Frames reconstructed from binary data\n")
+            self.decap_text.insert(tk.END, f"\n→ Converted binary signals back to frames\n")
         
         self.decap_text.insert(tk.END, "\n")
         self.decap_text.see(tk.END)
