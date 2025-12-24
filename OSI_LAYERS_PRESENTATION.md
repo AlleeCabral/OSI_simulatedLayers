@@ -63,6 +63,7 @@ class OSILayer:
 ## Slide 4: Creating Concrete Layers
 
 ### Example: How Layers Are Implemented
+*(Simplified for clarity)*
 
 **Application Layer (Layer 7) - MQTT Protocol:**
 ```python
@@ -103,6 +104,8 @@ class TransportLayer(OSILayer):
 ```
 
 **Why This Matters:** Each layer focuses on its specific job, making the code easier to understand, test, and maintain!
+
+**Note:** The actual implementation includes additional details like checksums, error handling, and proper data extraction from nested dictionaries. See `osi_simulator.py` for complete code.
 
 ---
 
