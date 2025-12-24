@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 """
+Name: Alexandre Cabral
+Matriculation Number: 77312426
+Project Title: Visualizing Data Flow Through the OSI Model
+Subject: IT Platform
+Task: Mini project
+
 OSI Model Data Flow Simulator
 Simulates data encapsulation and decapsulation through all 7 OSI layers
 Using MQTT protocol (Mosquitto broker simulation)
