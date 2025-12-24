@@ -3,7 +3,7 @@
 
 ---
 
-## Slide 1: Title & Overview
+## Overview
 
 ### OSI Model: Understanding Data Flow Through 7 Layers
 **MQTT Protocol Simulation**
@@ -17,7 +17,7 @@
 
 ---
 
-## Slide 2: Introduction - The OSI Model
+## The OSI Model
 
 ### What is the OSI Model?
 The **Open Systems Interconnection (OSI) Model** is a conceptual framework that standardizes network communication into 7 distinct layers.
@@ -26,13 +26,13 @@ The **Open Systems Interconnection (OSI) Model** is a conceptual framework that 
 - **Encapsulation**: Adding headers as data moves DOWN the layers (Application → Physical)
 - **Decapsulation**: Removing headers as data moves UP the layers (Physical → Application)
 
-**Our Example:** Simulating an MQTT message from a Mosquitto broker through all 7 layers
+**Example:** Simulating an MQTT message from a Mosquitto broker through all 7 layers
 
 ---
 
-## Slide 3: OOP Architecture - Base Layer Class
+## OOP Architecture - Base Layer Class
 
-### How We Built This: Object-Oriented Design
+### Object-Oriented Design
 
 **The Foundation:** Every layer inherits from a base `OSILayer` class
 
@@ -60,7 +60,7 @@ class OSILayer:
 
 ---
 
-## Slide 4: Creating Concrete Layers
+## Creating Concrete Layers
 
 ### Example: How Layers Are Implemented
 *(Simplified for clarity)*
@@ -109,9 +109,9 @@ class TransportLayer(OSILayer):
 
 ---
 
-## Slide 5: Layer 7 - Application Layer
+## Layer 7
 
-### Layer 7: Application Layer (MQTT Protocol)
+### Application Layer (MQTT Protocol)
 
 **INPUT:**
 - User message (plain text): `"Temperature: 23.5C"`
@@ -136,9 +136,9 @@ MQTT Packet:
 
 ---
 
-## Slide 6: Layer 6 - Presentation Layer
+## Layer 6
 
-### Layer 6: Presentation Layer (Data Translation & Encryption)
+### Presentation Layer (Data Translation & Encryption)
 
 **INPUT:**
 - MQTT packet structure (JSON format)
@@ -158,9 +158,8 @@ MQTT Packet:
 
 ---
 
-## Slide 7: Layer 5 - Session Layer
-
-### Layer 5: Session Layer (Session Management)
+## Layer 5 
+### Session Layer (Session Management)
 
 **INPUT:**
 - Encrypted data from Presentation Layer
@@ -179,9 +178,9 @@ MQTT Packet:
 
 ---
 
-## Slide 8: Layer 4 - Transport Layer
+## Layer 4 
 
-### Layer 4: Transport Layer (Segmentation & Ports)
+### Transport Layer (Segmentation & Ports)
 
 **INPUT:**
 - Session data from Layer 5
@@ -207,9 +206,9 @@ Segments:
 
 ---
 
-## Slide 9: Layer 3 - Network Layer
+## Layer 3 
 
-### Layer 3: Network Layer (Routing & IP Addressing)
+### Network Layer (Routing & IP Addressing)
 
 **INPUT:**
 - Multiple segments from Transport Layer
@@ -233,9 +232,9 @@ IP Packets (one per segment):
 
 ---
 
-## Slide 10: Layer 2 - Data Link Layer
+## Layer 2 
 
-### Layer 2: Data Link Layer (MAC Addressing & Frame Creation)
+### Data Link Layer (MAC Addressing & Frame Creation)
 
 **INPUT:**
 - IP packets from Network Layer
@@ -259,9 +258,9 @@ Frames (one per packet):
 
 ---
 
-## Slide 11: Layer 1 - Physical Layer
+## Layer 1 
 
-### Layer 1: Physical Layer (Binary Transmission)
+### Physical Layer (Binary Transmission)
 
 **INPUT:**
 - Frames from Data Link Layer
@@ -280,9 +279,9 @@ Frames (one per packet):
 
 ---
 
-## Slide 12: Decapsulation Process (Receiving Side)
+## Decapsulation Process (Receiving Side)
 
-### Decapsulation: Reversing the Process
+### Reversing the Process
 
 When data is received, the process reverses (Physical → Application):
 
@@ -298,7 +297,7 @@ When data is received, the process reverses (Physical → Application):
 
 ---
 
-## Slide 13: Verification & Summary
+## Verification & Summary
 
 ### Data Integrity Verification
 
@@ -331,26 +330,8 @@ When data is received, the process reverses (Physical → Application):
 python3 osi_simulator.py
 ```
 
-**GUI Mode:**
-```bash
-python3 osi_gui.py
-```
-
 **What You'll See:**
 - Complete encapsulation process with detailed layer information
 - Complete decapsulation process showing data reconstruction
 - Verification that original message is recovered correctly
 
-### Questions?
-
-Thank you for your attention!
-
----
-
-## Additional Resources
-
-- **Repository:** github.com/AlleeCabral/OSI_simulatedLayers
-- **MQTT Protocol:** mqtt.org
-- **OSI Model:** ISO/IEC 7498-1 standard
-
-**Note:** This simulation uses simplified versions of protocols for educational purposes. Real-world implementations are more complex and include additional security, error handling, and optimization features.
