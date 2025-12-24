@@ -30,7 +30,86 @@ The **Open Systems Interconnection (OSI) Model** is a conceptual framework that 
 
 ---
 
-## Slide 3: Layer 7 - Application Layer
+## Slide 3: OOP Architecture - Base Layer Class
+
+### How We Built This: Object-Oriented Design
+
+**The Foundation:** Every layer inherits from a base `OSILayer` class
+
+```python
+class OSILayer:
+    """Base class for all OSI layers"""
+    
+    def __init__(self, layer_number: int, layer_name: str):
+        self.layer_number = layer_number
+        self.layer_name = layer_name
+    
+    def encapsulate(self, data: Any) -> Any:
+        """Add layer-specific headers during encapsulation"""
+        raise NotImplementedError
+    
+    def decapsulate(self, data: Any) -> Any:
+        """Remove layer-specific headers during decapsulation"""
+        raise NotImplementedError
+```
+
+**Key OOP Concepts:**
+- **Polymorphism**: Each layer implements its own `encapsulate()` and `decapsulate()` methods
+- **Abstraction**: Base class defines the interface, concrete classes implement the details
+- **Modularity**: Each layer is independent and can be modified without affecting others
+
+---
+
+## Slide 4: Creating Concrete Layers
+
+### Example: How Layers Are Implemented
+*(Simplified for clarity)*
+
+**Application Layer (Layer 7) - MQTT Protocol:**
+```python
+class ApplicationLayer(OSILayer):
+    def __init__(self):
+        super().__init__(7, "Application Layer")
+    
+    def encapsulate(self, message: str) -> Dict:
+        mqtt_packet = {
+            "fixed_header": {"packet_type": "PUBLISH", "qos": 1},
+            "variable_header": {"topic": "Test/message", "packet_id": 12345},
+            "payload": message
+        }
+        return {"mqtt_packet": mqtt_packet, "data": message}
+```
+
+**Transport Layer (Layer 4) - Segmentation:**
+```python
+class TransportLayer(OSILayer):
+    def __init__(self):
+        super().__init__(4, "Transport Layer")
+        self.src_port = 8080
+        self.dst_port = 443
+        self.segment_size = 10  # bytes
+    
+    def encapsulate(self, data: Dict) -> Dict:
+        # Split data into 10-byte segments
+        segments = []
+        for i in range(0, len(data), self.segment_size):
+            segment_data = data[i:i + self.segment_size]
+            segments.append({
+                "src_port": self.src_port,
+                "dst_port": self.dst_port,
+                "sequence": i // self.segment_size,
+                "data": segment_data
+            })
+        return {"segments": segments}
+```
+
+**Why This Matters:** Each layer focuses on its specific job, making the code easier to understand, test, and maintain!
+
+**Note:** The actual implementation includes additional details like checksums, error handling, and proper data extraction from nested dictionaries. See `osi_simulator.py` for complete code.
+
+---
+
+## Slide 5: Layer 7 - Application Layer
 
 ### Layer 7: Application Layer (MQTT Protocol)
 
@@ -57,7 +136,7 @@ MQTT Packet:
 
 ---
 
-## Slide 4: Layer 6 - Presentation Layer
+## Slide 6: Layer 6 - Presentation Layer
 
 ### Layer 6: Presentation Layer (Data Translation & Encryption)
 
@@ -79,7 +158,7 @@ MQTT Packet:
 
 ---
 
-## Slide 5: Layer 5 - Session Layer
+## Slide 7: Layer 5 - Session Layer
 
 ### Layer 5: Session Layer (Session Management)
 
@@ -100,7 +179,7 @@ MQTT Packet:
 
 ---
 
-## Slide 6: Layer 4 - Transport Layer
+## Slide 8: Layer 4 - Transport Layer
 
 ### Layer 4: Transport Layer (Segmentation & Ports)
 
@@ -128,7 +207,7 @@ Segments:
 
 ---
 
-## Slide 7: Layer 3 - Network Layer
+## Slide 9: Layer 3 - Network Layer
 
 ### Layer 3: Network Layer (Routing & IP Addressing)
 
@@ -154,7 +233,7 @@ IP Packets (one per segment):
 
 ---
 
-## Slide 8: Layer 2 - Data Link Layer
+## Slide 10: Layer 2 - Data Link Layer
 
 ### Layer 2: Data Link Layer (MAC Addressing & Frame Creation)
 
@@ -180,7 +259,7 @@ Frames (one per packet):
 
 ---
 
-## Slide 9: Layer 1 - Physical Layer
+## Slide 11: Layer 1 - Physical Layer
 
 ### Layer 1: Physical Layer (Binary Transmission)
 
@@ -201,7 +280,7 @@ Frames (one per packet):
 
 ---
 
-## Slide 10: Decapsulation Process (Receiving Side)
+## Slide 12: Decapsulation Process (Receiving Side)
 
 ### Decapsulation: Reversing the Process
 
@@ -219,7 +298,7 @@ When data is received, the process reverses (Physical → Application):
 
 ---
 
-## Slide 11: Verification & Summary
+## Slide 13: Verification & Summary
 
 ### Data Integrity Verification
 
@@ -243,7 +322,7 @@ When data is received, the process reverses (Physical → Application):
 
 ---
 
-## Slide 12: Questions & Demo
+## Slide 14: Questions & Demo
 
 ### Try It Yourself!
 
